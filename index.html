@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#14243a" />
+  <meta name="description" content="A clean SaaS-style supermarket management dashboard for products, inventory, billing, and sales." />
+  <title>MarketFlow — Supermarket Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a href="#dashboard" class="brand" aria-label="MarketFlow dashboard" data-nav="dashboard">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H7"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M10 10h8M14 7v6"/></svg></span>
+        <span class="brand-copy"><strong>MarketFlow</strong><small>STORE MANAGER</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="side-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-nav="dashboard"><span class="nav-icon" data-icon="grid"></span><span>Dashboard</span></button>
+        <button class="nav-link" data-nav="products"><span class="nav-icon" data-icon="box"></span><span>Products</span><span class="nav-count" id="product-count">—</span></button>
+        <button class="nav-link" data-nav="inventory"><span class="nav-icon" data-icon="layers"></span><span>Inventory</span><span class="nav-dot" id="low-stock-dot"></span></button>
+        <button class="nav-link" data-nav="billing"><span class="nav-icon" data-icon="shopping-cart"></span><span>Point of sale</span></button>
+        <button class="nav-link" data-nav="sales"><span class="nav-icon" data-icon="receipt"></span><span>Sales & bills</span></button>
+        <button class="nav-link" data-nav="reports"><span class="nav-icon" data-icon="chart"></span><span>Reports</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><span class="help-icon" data-icon="sparkles"></span><strong>Need a hand?</strong><p>Keep your store running smoothly with MarketFlow.</p><button id="help-button" class="help-link">Quick guide <span>↗</span></button></div>
+        <button class="nav-link" data-nav="settings"><span class="nav-icon" data-icon="settings"></span><span>Settings</span></button>
+        <div class="sidebar-user"><div class="avatar">AR</div><div class="user-copy"><strong>Store Admin</strong><small>Administrator</small></div><button class="icon-button sidebar-menu" aria-label="User menu" id="profile-button"><span data-icon="more"></span></button></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="mobile-menu" aria-label="Open navigation"><span data-icon="menu"></span></button>
+        <div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong id="breadcrumb-current">Dashboard</strong></div>
+        <div class="topbar-actions">
+          <label class="global-search"><span data-icon="search"></span><input id="global-search" type="search" placeholder="Search products, bills..." autocomplete="off" /><kbd>⌘ K</kbd></label>
+          <button class="icon-button notification-button" id="notifications-button" aria-label="View low stock alerts"><span data-icon="bell"></span><i id="notification-dot"></i></button>
+          <div class="top-profile"><div class="avatar avatar-small">AR</div><div><strong>Admin</strong><small>Store owner</small></div><span class="chevron">⌄</span></div>
+        </div>
+      </header>
+      <div id="global-search-results" class="search-results hidden"></div>
+      <section id="app-view" class="content-area" aria-live="polite"></section>
+      <footer class="app-footer"><span>© <span id="year"></span> MarketFlow</span><span><span class="online-indicator"></span> MySQL database <span class="footer-divider">·</span> Synced through the API</span></footer>
+    </main>
+  </div>
+
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="presentation">
+    <section class="modal" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <div class="modal-header"><div><span class="eyebrow">PRODUCT CATALOG</span><h2 id="product-modal-title">Add product</h2><p>Enter product details and current stock.</p></div><button class="icon-button" id="close-product-modal" aria-label="Close dialog"><span data-icon="close"></span></button></div>
+      <form id="product-form">
+        <input type="hidden" id="product-id" />
+        <div class="form-grid">
+          <label class="field field-wide">Product name <span>*</span><input id="product-name" required maxlength="90" placeholder="e.g. Basmati Rice 1 kg" /></label>
+          <label class="field">SKU / code<input id="product-sku" maxlength="30" placeholder="e.g. RICE-001" /></label>
+          <label class="field">Category <span>*</span><select id="product-category" required><option>Staples</option><option>Dairy</option><option>Beverages</option><option>Snacks</option><option>Personal care</option><option>Household</option><option>Produce</option><option>Other</option></select></label>
+          <label class="field">Selling price (₹) <span>*</span><input id="product-price" type="number" min="0.01" step="0.01" required placeholder="0.00" /></label>
+          <label class="field">Stock quantity <span>*</span><input id="product-stock" type="number" min="0" step="1" required placeholder="0" /></label>
+          <label class="field">Low stock threshold<input id="product-threshold" type="number" min="0" step="1" value="10" /></label>
+          <label class="field">Status<select id="product-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+        </div>
+        <div class="modal-actions"><button type="button" class="button button-ghost" id="cancel-product">Cancel</button><button type="submit" class="button button-primary"><span data-icon="check"></span> Save product</button></div>
+      </form>
+    </section>
+    <section class="modal receipt-modal hidden" id="receipt-modal" role="dialog" aria-modal="true" aria-labelledby="receipt-title">
+      <div class="modal-header no-print"><div><span class="eyebrow">TRANSACTION COMPLETE</span><h2 id="receipt-title">Bill receipt</h2><p>Your demo sale has been saved.</p></div><button class="icon-button" id="close-receipt-modal" aria-label="Close receipt"><span data-icon="close"></span></button></div>
+      <div id="receipt-content" class="receipt-paper"></div>
+      <div class="modal-actions no-print"><button type="button" class="button button-ghost" id="receipt-done">Done</button><button type="button" class="button button-primary" id="print-receipt"><span data-icon="printer"></span> Print receipt</button></div>
+    </section>
+  </div>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>
