@@ -86,84 +86,136 @@ async function api(path, options = {}) {
 }
 
   async function initApp(){
-    
-  const existingToken = sessionStorage.getItem('marketflow_admin_token');
+    const existingToken = sessionStorage.getItem('marketflow_admin_token');
 
-  if (!existingToken) {
-    app.innerHTML = `
-      <section style="min-height:80vh;display:grid;place-items:center;padding:24px;">
-        <form id="admin-login-form" style="width:100%;max-width:380px;padding:28px;border:1px solid #ddd;border-radius:16px;background:white;color:#222;box-sizing:border-box;">
-          <h1 style="margin-top:0;">MarketFlow</h1>
-          <p>Admin Login</p>
+    if (!existingToken) {
+      document.body.classList.add('auth-page');
 
-          <label for="admin-username">Username</label>
-          <input id="admin-username" name="username" required autocomplete="username"
-            style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 16px;">
-
-          <label for="admin-password">Password</label>
-          <input id="admin-password" name="password" type="password" required autocomplete="current-password"
-            style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 16px;">
-
-          <button type="submit" style="width:100%;padding:12px;cursor:pointer;">Log in</button>
-          <p id="login-error" role="alert" style="color:#c62828;"></p>
-        </form>
-      </section>
-    `;
-
-    document.getElementById('admin-login-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      const form = event.currentTarget;
-      const button = form.querySelector('button[type="submit"]');
-      const errorBox = document.getElementById('login-error');
-
-      button.disabled = true;
-      button.textContent = 'Logging in...';
-      errorBox.textContent = '';
-
-      try {
-        const result = await api('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({
-            username: form.username.value,
-            password: form.password.value
-          })
-        });
-
-        sessionStorage.setItem('marketflow_admin_token', result.token);
-        await initApp();
-      } catch (error) {
-        errorBox.textContent = error.message || 'Login failed.';
-        button.disabled = false;
-        button.textContent = 'Log in';
+      let loginScreen = document.getElementById('admin-login-screen');
+      if (!loginScreen) {
+        loginScreen = document.createElement('div');
+        loginScreen.id = 'admin-login-screen';
+        loginScreen.className = 'auth-screen';
+        document.body.appendChild(loginScreen);
       }
-    });
 
-    return;
-  }
+      loginScreen.innerHTML = `
+        <section class="auth-showcase" aria-label="MarketFlow overview">
+          <div class="auth-showcase-glow auth-showcase-glow-one"></div>
+          <div class="auth-showcase-glow auth-showcase-glow-two"></div>
+          <a class="auth-brand" href="#" aria-label="MarketFlow">
+            <span class="auth-brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H7"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M10 10h8M14 7v6"/></svg></span>
+            <span class="auth-brand-copy"><strong>MarketFlow</strong><small>STORE MANAGER</small></span>
+          </a>
+          <div class="auth-showcase-content">
+            <span class="auth-live-label"><span></span> YOUR STORE, IN SYNC</span>
+            <h1>Run your store.<br><span>Not the chaos.</span></h1>
+            <p>One clear view of your products, stock, sales, and daily operations — so you can focus on what matters.</p>
+            <div class="auth-feature-list">
+              <div><span class="auth-feature-check">✓</span><span><strong>Inventory at a glance</strong><small>Know what is in stock and what needs attention.</small></span></div>
+              <div><span class="auth-feature-check">✓</span><span><strong>Sales made simpler</strong><small>Keep billing and store records in one place.</small></span></div>
+              <div><span class="auth-feature-check">✓</span><span><strong>Insights that are clear</strong><small>See the numbers that help you make decisions.</small></span></div>
+            </div>
+          </div>
+          <div class="auth-showcase-footer"><span class="auth-footer-dot"></span> A smarter workspace for everyday retail</div>
+        </section>
 
+        <main class="auth-main">
+          <div class="auth-mobile-brand">
+            <span class="auth-brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H7"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M10 10h8M14 7v6"/></svg></span>
+            <span class="auth-brand-copy"><strong>MarketFlow</strong><small>STORE MANAGER</small></span>
+          </div>
+          <div class="auth-card-wrap">
+            <div class="auth-card-heading">
+              <span class="auth-eyebrow">ADMIN WORKSPACE</span>
+              <h2>Welcome back<span class="auth-heading-period">.</span></h2>
+              <p>Sign in with your administrator credentials to continue.</p>
+            </div>
+            <form id="admin-login-form" class="auth-form">
+              <label class="auth-field" for="admin-username">
+                <span>Username</span>
+                <span class="auth-input-wrap">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+                  <input id="admin-username" name="username" required autocomplete="username" placeholder="Enter your username" />
+                </span>
+              </label>
+              <label class="auth-field" for="admin-password">
+                <span>Password</span>
+                <span class="auth-input-wrap">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
+                  <input id="admin-password" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password" />
+                </span>
+              </label>
+              <div class="auth-security-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-2.7 8-7 10-4.3-2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg><span>Secure administrator sign-in</span></div>
+              <button type="submit" class="auth-submit"><span class="auth-submit-label">Sign in to MarketFlow</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <p id="login-error" class="auth-error" role="alert" hidden></p>
+            </form>
+            <div class="auth-card-note"><span class="auth-lock-dot"></span> Your session is protected and will expire automatically.</div>
+          </div>
+          <footer class="auth-main-footer"><span>© ${new Date().getFullYear()} MarketFlow</span><span>Retail operations, made clearer.</span></footer>
+        </main>
+      `;
+
+      const loginForm = document.getElementById('admin-login-form');
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const button = loginForm.querySelector('button[type="submit"]');
+        const buttonLabel = button.querySelector('.auth-submit-label');
+        const errorBox = document.getElementById('login-error');
+        button.disabled = true;
+        button.classList.add('is-loading');
+        buttonLabel.textContent = 'Signing in…';
+        errorBox.hidden = true;
+        errorBox.textContent = '';
+
+        try {
+          const result = await api('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({
+              username: loginForm.elements.namedItem('username').value.trim(),
+              password: loginForm.elements.namedItem('password').value
+            })
+          });
+
+          if (!result.token) throw new Error('The server did not return a login token. Please try again.');
+          sessionStorage.setItem('marketflow_admin_token', result.token);
+          await initApp();
+        } catch (error) {
+          errorBox.textContent = error.message || 'Login failed. Please try again.';
+          errorBox.hidden = false;
+          button.disabled = false;
+          button.classList.remove('is-loading');
+          buttonLabel.textContent = 'Sign in to MarketFlow';
+        }
+      });
+
+      return;
+    }
+
+    document.body.classList.remove('auth-page');
+    document.getElementById('admin-login-screen')?.remove();
     app.innerHTML = '<section class="panel"><div class="panel-body"><strong>Connecting to MarketFlow database…</strong><p class="panel-subtitle">Loading products, sales, and settings from MySQL.</p></div></section>';
     try {
       state = await api('/bootstrap');
       renderPage();
-    } 
-catch (error) {
-  console.error('MarketFlow API connection failed:', error);
+    } catch (error) {
+      console.error('MarketFlow API connection failed:', error);
 
-  if (
-    error.message === 'Please log in as admin.' ||
-    error.message === 'Invalid or expired token.'
-  ) {
-    sessionStorage.removeItem('marketflow_admin_token');
-    await initApp();
-    return;
+      if (
+        error.message === 'Please log in as admin.' ||
+        error.message === 'Invalid or expired token.'
+      ) {
+        sessionStorage.removeItem('marketflow_admin_token');
+        await initApp();
+        return;
+      }
+
+      app.innerHTML = `<section class="panel"><div class="panel-body"><h2 class="panel-title">Cannot connect to the database</h2><p class="panel-subtitle">${esc(error.message)}</p><button id="retry-api" class="button button-primary">Retry</button></div></section>`;
+      $('retry-api')?.addEventListener('click', initApp);
+    }
   }
 
-  app.innerHTML = `<section class="panel"><div class="panel-body"><h2 class="panel-title">Cannot connect to the database</h2><p class="panel-subtitle">${error.message}</p><button id="retry-api" class="button button-primary">Retry</button></div></section>`;
-  $('retry-api')?.addEventListener('click', initApp);
-}
-
-  }
   let state = {products:[], sales:[], settings:{storeName:'MarketFlow Grocery',currency:'INR',taxRate:0,lowStockThreshold:10,showTips:true}, nextSale:1049};let currentPage='dashboard';let productFilter='all';let inventoryFilter='all';let salesFilter='all';let salesSearch='';let productSearch='';let billingSearch='';let cart=[];let currentReceipt=null;let settingsTab='store';let chartRange='7days';
   const app=document.getElementById('app-view');
   const $=id=>document.getElementById(id);
@@ -190,7 +242,7 @@ catch (error) {
   function renderBilling(){const list=activeProducts().filter(p=>p.stock>0&&(!billingSearch||`${p.name} ${p.sku} ${p.category}`.toLowerCase().includes(billingSearch.toLowerCase())));const subtotal=cart.reduce((n,c)=>n+c.price*c.qty,0);const tax=subtotal*(Number(state.settings.taxRate||0)/100);const total=subtotal+tax;return `${pageHeading('Point of sale','Build a customer bill and complete a checkout.','<span class="status-pill success">'+icon('check')+' Ready for checkout</span>')}<div class="billing-layout"><section class="panel"><div class="panel-header panel-header-padded"><div><h2 class="panel-title">Choose products</h2><p class="panel-subtitle">Select an item to add it to the current bill.</p></div><span class="status-pill neutral">${list.length} available</span></div><div class="section-toolbar"><label class="search-field" style="width:100%">${icon('search')}<input id="billing-search" type="search" placeholder="Find a product by name or SKU..." value="${esc(billingSearch)}" /></label></div><div class="panel-body" style="padding-top:0"><div class="billing-products">${list.length?list.map(p=>`<article class="billing-product"><div class="billing-product-top"><span class="billing-product-icon">${esc(p.emoji||'📦')}</span><span class="stock-mini">${p.stock} in stock</span></div><h3>${esc(p.name)}</h3><span class="sku-mini">${esc(p.sku||p.id)} · ${esc(p.category)}</span><div class="billing-product-bottom"><strong>${money(p.price)}</strong><button class="button button-soft button-small" data-action="add-to-cart" data-id="${esc(p.id)}">${icon('plus')} Add</button></div></article>`).join(''):`<div class="empty-state">${icon('search')}<strong>No matching products</strong><p>Try another search term.</p></div>`}</div></div></section><section class="panel cart-panel"><div class="panel-header panel-header-padded"><div><h2 class="panel-title">Current bill</h2><p class="panel-subtitle">${cart.reduce((n,c)=>n+c.qty,0)} item(s) in cart</p></div><button class="button button-ghost button-small" data-action="clear-cart">Clear</button></div>${cart.length?`<div class="cart-lines">${cart.map(c=>`<div class="cart-line"><span class="cart-line-icon">${esc(c.emoji||'📦')}</span><div class="cart-line-copy"><strong>${esc(c.name)}</strong><small>${money(c.price)} each</small></div><div class="qty-control"><button data-action="cart-minus" data-id="${esc(c.productId)}" aria-label="Decrease quantity">−</button><span>${c.qty}</span><button data-action="cart-plus" data-id="${esc(c.productId)}" aria-label="Increase quantity">+</button></div></div>`).join('')}</div>`:`<div class="cart-empty"><span class="empty-icon">${icon('shopping-cart')}</span><strong>Your cart is empty</strong><p>Add products from the list to start a bill.</p></div>`}<div class="cart-checkout-fields"><label class="field">Customer name <input id="customer-name" placeholder="Walk-in customer" maxlength="80" /></label><label class="field">Payment method<select id="payment-method"><option>Cash</option><option>UPI</option><option>Card</option><option>Other</option></select></label></div><div class="cart-summary"><div class="summary-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div><div class="summary-row"><span>Tax (${Number(state.settings.taxRate||0)}%)</span><strong>${money(tax)}</strong></div><div class="summary-row total"><span>Total due</span><strong>${money(total)}</strong></div><button class="button button-primary button-block" data-action="checkout" ${cart.length?'':'disabled'}>${icon('receipt')} Complete sale · ${money(total)}</button><p class="muted-text center" style="font-size:9px;line-height:1.5;margin:10px 0 0">Demo checkout only. No actual payment is processed.</p></div></section></div>`}
   function renderSales(){let sales=[...state.sales].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(s=>(salesFilter==='all'||(salesFilter==='today'&&new Date(s.date).toDateString()===new Date().toDateString()))&&(!salesSearch||`${s.id} ${s.customer} ${s.payment}`.toLowerCase().includes(salesSearch.toLowerCase())));return `${pageHeading('Sales & bills','Review completed transactions and reprint receipts.','<button class="button button-ghost" data-action="export-sales">'+icon('download')+' Export CSV</button><button class="button button-primary" data-nav="billing">'+icon('plus')+' New bill</button>')}<div class="sales-summary-grid"><div class="mini-summary"><span>All-time sales</span><strong>${money(totalRevenue())}</strong><small>Across ${state.sales.length} saved bills</small></div><div class="mini-summary"><span>Today's sales</span><strong>${money(sumToday())}</strong><small>${todaySales().length} transactions today</small></div><div class="mini-summary"><span>Average bill value</span><strong>${money(state.sales.length?totalRevenue()/state.sales.length:0)}</strong><small>Average per transaction</small></div></div><section class="panel"><div class="panel-header panel-header-padded"><div><h2 class="panel-title">Transaction history</h2><p class="panel-subtitle">Bills are listed with newest first</p></div><span class="status-pill neutral">${sales.length} bills</span></div><div class="section-toolbar"><div class="filter-row"><label class="search-field">${icon('search')}<input id="sales-search" type="search" placeholder="Search bill or customer..." value="${esc(salesSearch)}" /></label><select class="filter-select" id="sales-filter"><option value="all" ${salesFilter==='all'?'selected':''}>All dates</option><option value="today" ${salesFilter==='today'?'selected':''}>Today</option></select></div></div>${tableShell(['Bill number','Customer / date','Items','Bill amount','Payment status','Actions'],sales.map(salesRow).join(''),'No sales found.')}<div class="table-footer"><span>Transaction history stored in MySQL</span><span>${sales.length} records</span></div></section>`}
   function renderReports(){const sales=[...state.sales];const byPayment={Cash:0,UPI:0,Card:0,Other:0};sales.forEach(s=>byPayment[s.payment]=(byPayment[s.payment]||0)+Number(s.total||0));const cats={};state.products.forEach(p=>cats[p.category]=(cats[p.category]||0)+(p.stock*p.price));const catTotal=Object.values(cats).reduce((a,b)=>a+b,0)||1;const colors=['#4777f5','#10a879','#f0a23c','#8a68e8','#ed7184','#59a7d9','#91a5be'];const vals=[430,570,490,730,610,880,790];return `${pageHeading('Reports & insights','A snapshot of sales, payments, and stock value.','<button class="button button-primary" data-action="export-data">'+icon('download')+' Export report</button>')}<div class="stats-grid">${statCard('Total revenue',money(totalRevenue()),'All records','wallet','blue','demo transaction history')}${statCard('Total bills',number(state.sales.length),'All time','receipt','green','completed transactions')}${statCard('Avg. bill value',money(state.sales.length?totalRevenue()/state.sales.length:0),'Per transaction','chart','purple','sales divided by bills')}${statCard('Inventory retail value',money(state.products.reduce((n,p)=>n+p.price*p.stock,0)),'Current stock','layers','orange','at listed selling price')}</div><div class="report-grid"><section class="panel"><div class="panel-header"><div><h2 class="panel-title">Sales activity</h2><p class="panel-subtitle">Illustrative daily totals for the report layout</p></div><span class="status-pill neutral">Demo chart</span></div><div class="panel-body"><div class="report-bars">${vals.map((v,i)=>`<div class="report-bar-column"><div class="report-bar-track"><div class="report-bar-fill" style="height:${v/950*100}%"></div></div><small>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}</small></div>`).join('')}</div></div></section><section class="panel"><div class="panel-header"><div><h2 class="panel-title">Payment methods</h2><p class="panel-subtitle">Revenue by recorded payment type</p></div></div><div class="panel-body">${Object.entries(byPayment).map(([name,value],i)=>`<div class="category-line"><i class="category-color" style="background:${colors[i]}"></i><span>${name}</span><strong>${money(value)}</strong></div>`).join('')}<div class="settings-divider"></div><div class="summary-row"><span>Recorded revenue</span><strong>${money(totalRevenue())}</strong></div></div></section></div><section class="panel"><div class="panel-header panel-header-padded"><div><h2 class="panel-title">Stock valuation by category</h2><p class="panel-subtitle">Estimated retail value of currently recorded inventory</p></div></div>${tableShell(['Category','Product count','Stock units','Retail value','Share of value'],Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,value])=>{const ps=state.products.filter(p=>p.category===cat);return `<tr><td class="table-primary">${esc(cat)}</td><td>${ps.length}</td><td>${number(ps.reduce((n,p)=>n+p.stock,0))}</td><td class="table-primary">${money(value)}</td><td><div style="display:flex;align-items:center;gap:8px;min-width:100px"><div class="bar-track" style="flex:1;margin:0"><div class="bar-fill" style="width:${value/catTotal*100}%"></div></div><span>${Math.round(value/catTotal*100)}%</span></div></td></tr>`}).join(''))}</section><p class="muted-text" style="font-size:10px;margin:15px 2px">Note: sample sales and chart values are provided to demonstrate the interface. Reports become meaningful as you record demo bills.</p>`}
-  function renderSettings(){return `${pageHeading('Settings','Manage the store details and demo preferences.','<button class="button button-primary" data-action="save-settings">'+icon('check')+' Save changes</button>')}<div class="settings-layout"><section class="panel settings-nav">${[['store','home','Store profile'],['inventory','layers','Inventory rules'],['data','download','Demo data']].map(([id,ico,label])=>`<button class="settings-tab ${settingsTab===id?'active':''}" data-action="settings-tab" data-tab="${id}">${icon(ico)} ${label}</button>`).join('')}</section><section class="panel settings-content">${settingsTab==='store'?`<h2 class="settings-section-title">Store profile</h2><p class="settings-section-desc">These details are stored in the connected MySQL database.</p><div class="settings-form"><label class="field">Store name<input id="setting-store-name" value="${esc(state.settings.storeName)}" maxlength="80" /></label><label class="field">Currency<select id="setting-currency"><option value="INR" selected>Indian Rupee (₹)</option></select></label><label class="field">Default tax rate (%)<input id="setting-tax-rate" type="number" min="0" max="100" step="0.01" value="${Number(state.settings.taxRate||0)}" /></label></div><div class="settings-divider"></div><h3 class="settings-section-title">Interface preferences</h3><div class="setting-row"><div><strong>Show helpful quick guide</strong><p>Display the small guide card in the sidebar.</p></div><button class="toggle ${state.settings.showTips?'on':''}" aria-label="Toggle quick guide" data-action="toggle-tips" aria-pressed="${!!state.settings.showTips}"></button></div>`:settingsTab==='inventory'?`<h2 class="settings-section-title">Inventory rules</h2><p class="settings-section-desc">Control when an item is marked as low stock. An item-specific threshold overrides this default.</p><div class="settings-form"><label class="field">Default low stock threshold (units)<input id="setting-threshold" type="number" min="0" step="1" value="${Number(state.settings.lowStockThreshold||10)}" /></label></div><div class="settings-divider"></div><p class="muted-text" style="font-size:11px;line-height:1.7">Products with quantities at or below their threshold appear in the Inventory alerts. You can set individual thresholds from each product's edit form.</p>`:`<h2 class="settings-section-title">Demo data & privacy</h2><p class="settings-section-desc">Products, inventory, bills, and settings are stored in the connected MySQL database.</p><div class="setting-row"><div><strong>Export a backup</strong><p>Download your products, sales, and settings as a JSON file.</p></div><button class="button button-ghost button-small" data-action="export-data">${icon('download')} Export JSON</button></div><div class="setting-row"><div><strong>Restore starter sample data</strong><p>Reset the demo to its original sample products and bills.</p></div><button class="button button-ghost button-small" data-action="reset-data">Reset demo</button></div><div class="settings-divider"></div><div class="alert-item"><span class="alert-symbol">${icon('warning')}</span><div class="alert-copy"><strong>Prototype only</strong><p>This starter backend does not include user login, role permissions, or production payment processing. Add authentication and security controls before using it with real customer or business data.</p></div></div>`}</section></div>`}
+  function renderSettings(){return `${pageHeading('Settings','Manage the store details and demo preferences.','<button class="button button-primary" data-action="save-settings">'+icon('check')+' Save changes</button>')}<div class="settings-layout"><section class="panel settings-nav">${[['store','home','Store profile'],['inventory','layers','Inventory rules'],['data','download','Demo data']].map(([id,ico,label])=>`<button class="settings-tab ${settingsTab===id?'active':''}" data-action="settings-tab" data-tab="${id}">${icon(ico)} ${label}</button>`).join('')}</section><section class="panel settings-content">${settingsTab==='store'?`<h2 class="settings-section-title">Store profile</h2><p class="settings-section-desc">These details are stored in the connected MySQL database.</p><div class="settings-form"><label class="field">Store name<input id="setting-store-name" value="${esc(state.settings.storeName)}" maxlength="80" /></label><label class="field">Currency<select id="setting-currency"><option value="INR" selected>Indian Rupee (₹)</option></select></label><label class="field">Default tax rate (%)<input id="setting-tax-rate" type="number" min="0" max="100" step="0.01" value="${Number(state.settings.taxRate||0)}" /></label></div><div class="settings-divider"></div><h3 class="settings-section-title">Interface preferences</h3><div class="setting-row"><div><strong>Show helpful quick guide</strong><p>Display the small guide card in the sidebar.</p></div><button class="toggle ${state.settings.showTips?'on':''}" aria-label="Toggle quick guide" data-action="toggle-tips" aria-pressed="${!!state.settings.showTips}"></button></div>`:settingsTab==='inventory'?`<h2 class="settings-section-title">Inventory rules</h2><p class="settings-section-desc">Control when an item is marked as low stock. An item-specific threshold overrides this default.</p><div class="settings-form"><label class="field">Default low stock threshold (units)<input id="setting-threshold" type="number" min="0" step="1" value="${Number(state.settings.lowStockThreshold||10)}" /></label></div><div class="settings-divider"></div><p class="muted-text" style="font-size:11px;line-height:1.7">Products with quantities at or below their threshold appear in the Inventory alerts. You can set individual thresholds from each product's edit form.</p>`:`<h2 class="settings-section-title">Demo data & privacy</h2><p class="settings-section-desc">Products, inventory, bills, and settings are stored in the connected MySQL database.</p><div class="setting-row"><div><strong>Export a backup</strong><p>Download your products, sales, and settings as a JSON file.</p></div><button class="button button-ghost button-small" data-action="export-data">${icon('download')} Export JSON</button></div><div class="setting-row"><div><strong>Restore starter sample data</strong><p>Reset the demo to its original sample products and bills.</p></div><button class="button button-ghost button-small" data-action="reset-data">Reset demo</button></div><div class="settings-divider"></div><div class="alert-item"><span class="alert-symbol">${icon('warning')}</span><div class="alert-copy"><strong>Prototype only</strong><p>This prototype uses a shared administrator login but does not include individual staff accounts, role-based permissions, or production payment processing. Complete the required security review before using real customer or business data.</p></div></div>`}</section></div>`}
   
 function renderPage() {
   const renderers = {
