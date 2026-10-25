@@ -266,18 +266,61 @@ function renderPage() {
   const tips = $('help-button').closest('.help-card');
   tips.style.display = state.settings.showTips ? 'block' : 'none';
 
-  let logout = document.getElementById('admin-logout-button');
+  // Place the sign-out action inside the existing Admin profile menu instead
+  // of displaying a fixed, unstyled button over the page header.
+  const profile = document.querySelector('.top-profile');
+  const actions = document.querySelector('.topbar-actions');
+  let profileMenu = document.getElementById('admin-profile-menu');
 
-  if (!logout) {
-    logout = document.createElement('button');
-    logout.id = 'admin-logout-button';
-    logout.textContent = 'Log out';
-    logout.style.cssText = 'position:fixed;top:12px;right:16px;z-index:9999;padding:10px 14px;cursor:pointer;';
-    logout.onclick = () => {
-      sessionStorage.removeItem('marketflow_admin_token');
-      initApp();
+  if (profile && actions && !profileMenu) {
+    profileMenu = document.createElement('div');
+    profileMenu.id = 'admin-profile-menu';
+    profileMenu.className = 'admin-profile-menu hidden';
+    profileMenu.innerHTML = `
+      <div class="admin-profile-menu-heading">
+        <strong>MarketFlow Admin</strong>
+        <small>Store owner</small>
+      </div>
+      <div class="admin-profile-menu-divider"></div>
+      <button type="button" id="admin-logout-button" class="admin-profile-menu-action" role="menuitem">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+        <span>Log out</span>
+      </button>`;
+    actions.appendChild(profileMenu);
+
+    profile.setAttribute('role', 'button');
+    profile.setAttribute('tabindex', '0');
+    profile.setAttribute('aria-haspopup', 'menu');
+    profile.setAttribute('aria-expanded', 'false');
+    profile.setAttribute('aria-controls', 'admin-profile-menu');
+
+    const toggleProfileMenu = () => {
+      const isOpening = profileMenu.classList.contains('hidden');
+      profileMenu.classList.toggle('hidden', !isOpening);
+      profile.setAttribute('aria-expanded', String(isOpening));
     };
-    document.body.appendChild(logout);
+    profile.addEventListener('click', toggleProfileMenu);
+    profile.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleProfileMenu();
+      }
+    });
+    document.addEventListener('click', event => {
+      if (!profile.contains(event.target) && !profileMenu.contains(event.target)) {
+        profileMenu.classList.add('hidden');
+        profile.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    const logout = profileMenu.querySelector('#admin-logout-button');
+    logout.addEventListener('click', event => {
+      event.stopPropagation();
+      sessionStorage.removeItem('marketflow_admin_token');
+      profileMenu.classList.add('hidden');
+      profile.setAttribute('aria-expanded', 'false');
+      initApp();
+    });
   }
 }
 
