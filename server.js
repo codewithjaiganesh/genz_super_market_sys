@@ -5,7 +5,8 @@ const fs = require("fs");
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
-const { randomUUID } = require('node:crypto');
+const crypto = require('node:crypto');
+const { randomUUID } = crypto;
 
 const app = express();
 const PORT = Number(process.env.PORT || process.env.API_PORT || 3000);
@@ -31,6 +32,100 @@ const allowedOrigins = process.env.CORS_ORIGIN
   : true;
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: '1mb' }));
+
+function safeCompare(a, b) {
+  const first = Buffer.from(String(a));
+  const second = Buffer.from(String(b));
+
+  return first.length === second.length &&
+    crypto.timingSafeEqual(first, second);
+}
+
+function createAdminToken() {
+  const payload = Buffer.from(JSON.stringify({
+    role: 'admin',
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000
+  })).toString('base64url');
+
+  const signature = crypto
+    .createHmac('sha256', process.env.JWT_SECRET)
+    .update(payload)
+    .digest('base64url');
+
+  return `${payload}.${signature}`;
+}
+
+function verifyAdminToken(token) {
+  if (!process.env.JWT_SECRET || !token) return false;
+
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+
+  const [payload, signature] = parts;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.JWT_SECRET)
+    .update(payload)
+    .digest('base64url');
+
+  if (!safeCompare(signature, expectedSignature)) return false;
+
+  try {
+    const data = JSON.parse(
+      Buffer.from(payload, 'base64url').toString('utf8')
+    );
+
+    return data.role === 'admin' &&
+      Number.isFinite(data.expiresAt) &&
+      data.expiresAt > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+app.post('/api/auth/login', (req, res) => {
+  const { ADMIN_USERNAME, ADMIN_PASSWORD, JWT_SECRET } = process.env;
+
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !JWT_SECRET) {
+    return res.status(500).json({
+      error: 'Admin login is not configured on the server.'
+    });
+  }
+
+  const username = String(req.body?.username || '');
+  const password = String(req.body?.password || '');
+
+  if (
+    !safeCompare(username, ADMIN_USERNAME) ||
+    !safeCompare(password, ADMIN_PASSWORD)
+  ) {
+    return res.status(401).json({
+      error: 'Incorrect username or password.'
+    });
+  }
+
+  res.json({ token: createAdminToken() });
+});
+
+// Require a valid admin token for all other API routes.
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health' || req.path === '/auth/login') {
+    return next();
+  }
+
+  const authorization = req.headers.authorization || '';
+  const token = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : '';
+
+  if (!verifyAdminToken(token)) {
+    return res.status(401).json({
+      error: 'Please log in as admin.'
+    });
+  }
+
+  next();
+});
 
 const DEFAULT_PRODUCTS = [
   { id: 'PRD-1001', name: 'Basmati Rice 1 kg', sku: 'STP-001', category: 'Staples', price: 78, stock: 54, threshold: 10, status: 'active', emoji: '🌾' },
